@@ -1,0 +1,10 @@
+package uk.co.hadoopathome.kafkastreams.drools
+
+import uk.co.hadoopathome.kafkastreams.drools.Message;
+
+rule "If Contains E Prepend 0"
+when
+    message:Message (content contains 'e') or message:Message (content contains 'E')
+then
+    message.setContent("0"+message.getContent());
+end

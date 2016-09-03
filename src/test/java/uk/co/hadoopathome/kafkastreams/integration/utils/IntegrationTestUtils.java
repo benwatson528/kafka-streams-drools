@@ -1,15 +1,14 @@
-package uk.co.hadoopathome.kafka.utils; /**
+package uk.co.hadoopathome.kafkastreams.integration.utils; /**
  * Copyright 2016 Confluent Inc.
- *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ * This class is copied directly from https://github.com/JohnReedLOL/kafka-streams. Importing was not
+ * possible as it is a test class.
  */
 
 /**
@@ -41,8 +40,8 @@ import java.util.stream.Collectors;
  */
 public class IntegrationTestUtils {
 
-    private static final int UNLIMITED_MESSAGES = -1;
     public static final long DEFAULT_TIMEOUT = 30 * 1000L;
+    private static final int UNLIMITED_MESSAGES = -1;
 
     /**
      * Returns up to `maxMessages` message-values from the topic.
@@ -125,30 +124,27 @@ public class IntegrationTestUtils {
      * @param <K>            Key type of the data records
      * @param <V>            Value type of the data records
      */
-    public static <K, V> void produceKeyValuesSynchronously(
-            String topic, Collection<KeyValue<K, V>> records, Properties producerConfig)
-            throws ExecutionException, InterruptedException {
+    public static <K, V> void produceKeyValuesSynchronously(String topic, Collection<KeyValue<K, V>> records,
+            Properties producerConfig) throws ExecutionException, InterruptedException {
         Producer<K, V> producer = new KafkaProducer<>(producerConfig);
         for (KeyValue<K, V> record : records) {
-            Future<RecordMetadata> f = producer.send(
-                    new ProducerRecord<>(topic, record.key, record.value));
+            Future<RecordMetadata> f = producer.send(new ProducerRecord<>(topic, record.key, record.value));
             f.get();
         }
         producer.flush();
         producer.close();
     }
 
-    public static <V> void produceValuesSynchronously(
-            String topic, Collection<V> records, Properties producerConfig)
+    public static <V> void produceValuesSynchronously(String topic, Collection<V> records, Properties producerConfig)
             throws ExecutionException, InterruptedException {
-        Collection<KeyValue<Object, V>> keyedRecords =
+        Collection<KeyValue<Object, V>>
+                keyedRecords =
                 records.stream().map(record -> new KeyValue<>(null, record)).collect(Collectors.toList());
         produceKeyValuesSynchronously(topic, keyedRecords, producerConfig);
     }
 
     public static <K, V> List<KeyValue<K, V>> waitUntilMinKeyValueRecordsReceived(Properties consumerConfig,
-            String topic,
-            int expectedNumRecords) throws InterruptedException {
+            String topic, int expectedNumRecords) throws InterruptedException {
 
         return waitUntilMinKeyValueRecordsReceived(consumerConfig, topic, expectedNumRecords, DEFAULT_TIMEOUT);
     }
@@ -164,26 +160,21 @@ public class IntegrationTestUtils {
      * @throws AssertionError if the given wait time elapses
      */
     public static <K, V> List<KeyValue<K, V>> waitUntilMinKeyValueRecordsReceived(Properties consumerConfig,
-            String topic,
-            int expectedNumRecords,
-            long waitTime) throws InterruptedException {
+            String topic, int expectedNumRecords, long waitTime) throws InterruptedException {
         List<KeyValue<K, V>> accumData = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         while (true) {
             List<KeyValue<K, V>> readData = readKeyValues(topic, consumerConfig);
             accumData.addAll(readData);
-            if (accumData.size() >= expectedNumRecords)
-                return accumData;
-            if (System.currentTimeMillis() > startTime + waitTime)
-                throw new AssertionError("Expected " +  expectedNumRecords +
-                        " but received only " + accumData.size() +
-                        " records before timeout " + waitTime + " ms");
+            if (accumData.size() >= expectedNumRecords) return accumData;
+            if (System.currentTimeMillis() > startTime + waitTime) throw new AssertionError(
+                    "Expected " + expectedNumRecords + " but received only " + accumData.size()
+                            + " records before timeout " + waitTime + " ms");
             Thread.sleep(Math.min(waitTime, 100L));
         }
     }
 
-    public static <V> List<V> waitUntilMinValuesRecordsReceived(Properties consumerConfig,
-            String topic,
+    public static <V> List<V> waitUntilMinValuesRecordsReceived(Properties consumerConfig, String topic,
             int expectedNumRecords) throws InterruptedException {
 
         return waitUntilMinValuesRecordsReceived(consumerConfig, topic, expectedNumRecords, DEFAULT_TIMEOUT);
@@ -199,21 +190,17 @@ public class IntegrationTestUtils {
      * @throws InterruptedException
      * @throws AssertionError if the given wait time elapses
      */
-    public static <V> List<V> waitUntilMinValuesRecordsReceived(Properties consumerConfig,
-            String topic,
-            int expectedNumRecords,
-            long waitTime) throws InterruptedException {
+    public static <V> List<V> waitUntilMinValuesRecordsReceived(Properties consumerConfig, String topic,
+            int expectedNumRecords, long waitTime) throws InterruptedException {
         List<V> accumData = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         while (true) {
             List<V> readData = readValues(topic, consumerConfig, expectedNumRecords);
             accumData.addAll(readData);
-            if (accumData.size() >= expectedNumRecords)
-                return accumData;
-            if (System.currentTimeMillis() > startTime + waitTime)
-                throw new AssertionError("Expected " +  expectedNumRecords +
-                        " but received only " + accumData.size() +
-                        " records before timeout " + waitTime + " ms");
+            if (accumData.size() >= expectedNumRecords) return accumData;
+            if (System.currentTimeMillis() > startTime + waitTime) throw new AssertionError(
+                    "Expected " + expectedNumRecords + " but received only " + accumData.size()
+                            + " records before timeout " + waitTime + " ms");
             Thread.sleep(Math.min(waitTime, 100L));
         }
     }

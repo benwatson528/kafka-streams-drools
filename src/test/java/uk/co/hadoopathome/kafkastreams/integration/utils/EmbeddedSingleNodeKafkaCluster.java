@@ -1,4 +1,4 @@
-package uk.co.hadoopathome.kafka.utils;
+package uk.co.hadoopathome.kafkastreams.integration.utils;
 
 /**
  * This class is copied directly from https://github.com/JohnReedLOL/kafka-streams. Importing was not
@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Properties;
 
-
-
 /**
  * Runs an in-memory, "embedded" Kafka cluster with 1 ZooKeeper instance and 1 Kafka broker.
  */
@@ -27,11 +25,10 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
     private static final int DEFAULT_BROKER_PORT = 0; // 0 results in a random port being selected
     private static final String KAFKA_SCHEMAS_TOPIC = "_schemas";
     private static final String AVRO_COMPATIBILITY_TYPE = AvroCompatibilityLevel.NONE.name;
-
+    private final Properties brokerConfig;
     private ZooKeeperEmbedded zookeeper;
     private KafkaEmbedded broker;
     private RestApp schemaRegistry;
-    private final Properties brokerConfig;
 
     /**
      * Creates and starts a Kafka cluster.
@@ -65,13 +62,12 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
                 effectiveBrokerConfig.getProperty(KafkaConfig$.MODULE$.PortProp()));
         broker = new KafkaEmbedded(effectiveBrokerConfig);
         broker.start();
-        log.debug("Kafka instance is running at {}, connected to ZooKeeper at {}",
-                broker.brokerList(), broker.zookeeperConnect());
+        log.debug("Kafka instance is running at {}, connected to ZooKeeper at {}", broker.brokerList(),
+                broker.zookeeperConnect());
 
-        schemaRegistry = new RestApp(
-                InstanceSpec.getRandomPort(),
-                zookeeperConnect(),
-                KAFKA_SCHEMAS_TOPIC, AVRO_COMPATIBILITY_TYPE);
+        schemaRegistry =
+                new RestApp(InstanceSpec.getRandomPort(), zookeeperConnect(), KAFKA_SCHEMAS_TOPIC,
+                        AVRO_COMPATIBILITY_TYPE);
         schemaRegistry.start();
     }
 
@@ -110,7 +106,6 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
 
     /**
      * This cluster's `bootstrap.servers` value.  Example: `127.0.0.1:9092`.
-     *
      * You can use this to tell Kafka producers how to connect to this cluster.
      */
     public String bootstrapServers() {
@@ -120,7 +115,6 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
     /**
      * This cluster's ZK connection string aka `zookeeper.connect` in `hostnameOrIp:port` format.
      * Example: `127.0.0.1:2181`.
-     *
      * You can use this to e.g. tell Kafka consumers how to connect to this cluster.
      */
     public String zookeeperConnect() {
@@ -162,10 +156,7 @@ public class EmbeddedSingleNodeKafkaCluster extends ExternalResource {
      * @param replication The replication factor for (partitions of) this topic.
      * @param topicConfig Additional topic-level configuration settings.
      */
-    public void createTopic(String topic,
-            int partitions,
-            int replication,
-            Properties topicConfig) {
+    public void createTopic(String topic, int partitions, int replication, Properties topicConfig) {
         broker.createTopic(topic, partitions, replication, topicConfig);
     }
 

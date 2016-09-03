@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kmodule
+        xmlns="http://www.drools.org/xsd/kmodule">
+
+    <kbase name="IfContainsEPrepend0KB" packages="uk.co.hadoopathome.kafkastreams.drools">
+        <ksession name="IfContainsEPrepend0KS"/>
+    </kbase>
+
+</kmodule>

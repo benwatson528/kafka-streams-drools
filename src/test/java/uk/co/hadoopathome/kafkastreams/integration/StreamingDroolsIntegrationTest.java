@@ -1,15 +1,13 @@
-package uk.co.hadoopathome.kafka; /**
+package uk.co.hadoopathome.kafkastreams.integration; /**
  * Copyright 2016 Confluent Inc.
- *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ * This class is adapted from https://github.com/JohnReedLOL/kafka-streams.
  */
 
 /**
@@ -27,8 +25,8 @@ import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import uk.co.hadoopathome.kafka.utils.EmbeddedSingleNodeKafkaCluster;
-import uk.co.hadoopathome.kafka.utils.IntegrationTestUtils;
+import uk.co.hadoopathome.kafkastreams.integration.utils.EmbeddedSingleNodeKafkaCluster;
+import uk.co.hadoopathome.kafkastreams.integration.utils.IntegrationTestUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,40 +39,28 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * Note: This example uses lambda expressions and thus works with Java 8+ only.
  */
-public class StreamingDemoApplicationTest {
+public class StreamingDroolsIntegrationTest {
 
-    @ClassRule
-    public static final EmbeddedSingleNodeKafkaCluster CLUSTER = new EmbeddedSingleNodeKafkaCluster();
+    @ClassRule public static final EmbeddedSingleNodeKafkaCluster CLUSTER = new EmbeddedSingleNodeKafkaCluster();
 
     private static final String inputTopic = "inputTopic";
     private static final String outputTopic = "outputTopic";
 
-    @BeforeClass
-    public static void startKafkaCluster() throws Exception {
+    @BeforeClass public static void startKafkaCluster() throws Exception {
         CLUSTER.createTopic(inputTopic);
         CLUSTER.createTopic(outputTopic);
     }
 
-    @Test
-    public void shouldCountWords() throws Exception {
-        List<String> inputValues = Arrays.asList(
-                "Hello Kafka Streams",
-                "All streams lead to Kafka",
-                "Join Kafka Summit"
-        );
-        List<KeyValue<String, Long>> expectedWordCounts = Arrays.asList(
-                new KeyValue<>("hello", 1L),
-                new KeyValue<>("kafka", 1L),
-                new KeyValue<>("streams", 1L),
-                new KeyValue<>("all", 1L),
-                new KeyValue<>("streams", 2L),
-                new KeyValue<>("lead", 1L),
-                new KeyValue<>("to", 1L),
-                new KeyValue<>("kafka", 2L),
-                new KeyValue<>("join", 1L),
-                new KeyValue<>("kafka", 3L),
-                new KeyValue<>("summit", 1L)
-        );
+    @Test public void shouldCountWords() throws Exception {
+        List<String>
+                inputValues =
+                Arrays.asList("Hello Kafka Streams", "All streams lead to Kafka", "Join Kafka Summit");
+        List<KeyValue<String, Long>>
+                expectedWordCounts =
+                Arrays.asList(new KeyValue<>("hello", 1L), new KeyValue<>("kafka", 1L), new KeyValue<>("streams", 1L),
+                        new KeyValue<>("all", 1L), new KeyValue<>("streams", 2L), new KeyValue<>("lead", 1L),
+                        new KeyValue<>("to", 1L), new KeyValue<>("kafka", 2L), new KeyValue<>("join", 1L),
+                        new KeyValue<>("kafka", 3L), new KeyValue<>("summit", 1L));
 
         //
         // Step 1: Configure and start the processor topology.
@@ -107,11 +93,10 @@ public class StreamingDemoApplicationTest {
 
         KStream<String, String> textLines = builder.stream(inputTopic);
 
-        KStream<String, Long> wordCounts = textLines
-                .flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
-                .map((key, word) -> new KeyValue<>(word, word))
-                .countByKey(stringSerde, "Counts")
-                .toStream();
+        KStream<String, Long>
+                wordCounts =
+                textLines.flatMapValues(value -> Arrays.asList(value.toLowerCase().split("\\W+")))
+                        .map((key, word) -> new KeyValue<>(word, word)).countByKey(stringSerde, "Counts").toStream();
 
         wordCounts.to(stringSerde, longSerde, outputTopic);
 
@@ -138,8 +123,10 @@ public class StreamingDemoApplicationTest {
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
-        List<KeyValue<String, Long>> actualWordCounts = IntegrationTestUtils.waitUntilMinKeyValueRecordsReceived(consumerConfig,
-                outputTopic, expectedWordCounts.size());
+        List<KeyValue<String, Long>>
+                actualWordCounts =
+                IntegrationTestUtils
+                        .waitUntilMinKeyValueRecordsReceived(consumerConfig, outputTopic, expectedWordCounts.size());
         streams.close();
         assertThat(actualWordCounts).containsExactlyElementsOf(expectedWordCounts);
     }

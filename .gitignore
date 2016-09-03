@@ -26,7 +26,6 @@ buildNumber.properties
 .history
 .lib/
 dist/*
-target/
 lib_managed/
 src_managed/
 project/boot/
@@ -47,6 +46,10 @@ project/plugins/project/
 *.jar
 *.war
 *.ear
+
+# IntelliJ #
+kafka-streams-drools.iml
+.idea/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

@@ -27,8 +27,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="1.8">
-      <module name="kafka-streams-drools" target="1.5" />
-      <module name="streaming-demo" target="1.5" />
+      <module name="kafka-streams-drools" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

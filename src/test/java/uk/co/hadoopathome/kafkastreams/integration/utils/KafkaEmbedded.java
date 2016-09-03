@@ -1,4 +1,4 @@
-package uk.co.hadoopathome.kafka.utils;
+package uk.co.hadoopathome.kafkastreams.integration.utils;
 
 /**
  * This class is copied directly from https://github.com/JohnReedLOL/kafka-streams. Importing was not
@@ -27,7 +27,6 @@ import java.util.Properties;
 /**
  * Runs an in-memory, "embedded" instance of a Kafka broker, which listens at `127.0.0.1:9092` by
  * default.
- *
  * Requires a running ZooKeeper instance to connect to.  By default, it expects a ZooKeeper instance
  * running at `127.0.0.1:2181`.  You can specify a different ZooKeeper instance by setting the
  * `zookeeper.connect` parameter in the broker's configuration.
@@ -60,11 +59,11 @@ public class KafkaEmbedded {
         boolean loggingEnabled = true;
 
         KafkaConfig kafkaConfig = new KafkaConfig(effectiveConfig, loggingEnabled);
-        log.debug("Starting embedded Kafka broker (with log.dirs={} and ZK ensemble at {}) ...",
-                logDir, zookeeperConnect());
+        log.debug("Starting embedded Kafka broker (with log.dirs={} and ZK ensemble at {}) ...", logDir,
+                zookeeperConnect());
         kafka = TestUtils.createServer(kafkaConfig, SystemTime$.MODULE$);
-        log.debug("Startup of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...",
-                brokerList(), zookeeperConnect());
+        log.debug("Startup of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...", brokerList(),
+                zookeeperConnect());
     }
 
     private Properties effectiveConfigFrom(Properties initialConfig) throws IOException {
@@ -84,13 +83,12 @@ public class KafkaEmbedded {
 
     /**
      * This broker's `metadata.broker.list` value.  Example: `127.0.0.1:9092`.
-     *
      * You can use this to tell Kafka producers and consumers how to connect to this instance.
      */
     public String brokerList() {
-        return String.join(":", kafka.config().hostName(), Integer.toString(kafka.boundPort(SecurityProtocol.PLAINTEXT)));
+        return String
+                .join(":", kafka.config().hostName(), Integer.toString(kafka.boundPort(SecurityProtocol.PLAINTEXT)));
     }
-
 
     /**
      * The ZooKeeper connection string aka `zookeeper.connect`.
@@ -103,27 +101,27 @@ public class KafkaEmbedded {
      * Start the broker.
      */
     public void start() {
-        log.debug("Starting embedded Kafka broker at {} (with log.dirs={} and ZK ensemble at {}) ...",
-                brokerList(), logDir, zookeeperConnect());
+        log.debug("Starting embedded Kafka broker at {} (with log.dirs={} and ZK ensemble at {}) ...", brokerList(),
+                logDir, zookeeperConnect());
         kafka.startup();
-        log.debug("Startup of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...",
-                brokerList(), zookeeperConnect());
+        log.debug("Startup of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...", brokerList(),
+                zookeeperConnect());
     }
 
     /**
      * Stop the broker.
      */
     public void stop() {
-        log.debug("Shutting down embedded Kafka broker at {} (with ZK ensemble at {}) ...",
-                brokerList(), zookeeperConnect());
+        log.debug("Shutting down embedded Kafka broker at {} (with ZK ensemble at {}) ...", brokerList(),
+                zookeeperConnect());
         kafka.shutdown();
         kafka.awaitShutdown();
         log.debug("Removing logs.dir at {} ...", logDir);
         List<String> logDirs = Collections.singletonList(logDir.getAbsolutePath());
         tmpFolder.delete();
         CoreUtils.delete(scala.collection.JavaConversions.asScalaBuffer(logDirs).seq());
-        log.debug("Shutdown of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...",
-                brokerList(), zookeeperConnect());
+        log.debug("Shutdown of embedded Kafka broker at {} completed (with ZK ensemble at {}) ...", brokerList(),
+                zookeeperConnect());
     }
 
     /**
@@ -154,21 +152,17 @@ public class KafkaEmbedded {
      * @param replication The replication factor for (partitions of) this topic.
      * @param topicConfig Additional topic-level configuration settings.
      */
-    public void createTopic(String topic,
-            int partitions,
-            int replication,
-            Properties topicConfig) {
-        log.debug("Creating topic { name: {}, partitions: {}, replication: {}, config: {} }",
-                topic, partitions, replication, topicConfig);
+    public void createTopic(String topic, int partitions, int replication, Properties topicConfig) {
+        log.debug("Creating topic { name: {}, partitions: {}, replication: {}, config: {} }", topic, partitions,
+                replication, topicConfig);
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
         // only ZooKeeper and will be returned when listing topics, but Kafka itself does not create the
         // topic.
-        ZkClient zkClient = new ZkClient(
-                zookeeperConnect(),
-                DEFAULT_ZK_SESSION_TIMEOUT_MS,
-                DEFAULT_ZK_CONNECTION_TIMEOUT_MS,
-                ZKStringSerializer$.MODULE$);
+        ZkClient
+                zkClient =
+                new ZkClient(zookeeperConnect(), DEFAULT_ZK_SESSION_TIMEOUT_MS, DEFAULT_ZK_CONNECTION_TIMEOUT_MS,
+                        ZKStringSerializer$.MODULE$);
         boolean isSecure = false;
         ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeperConnect()), isSecure);
         AdminUtils.createTopic(zkUtils, topic, partitions, replication, topicConfig, RackAwareMode.Enforced$.MODULE$);

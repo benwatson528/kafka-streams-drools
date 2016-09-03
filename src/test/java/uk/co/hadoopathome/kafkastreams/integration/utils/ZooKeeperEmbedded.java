@@ -1,4 +1,4 @@
-package uk.co.hadoopathome.kafka.utils;
+package uk.co.hadoopathome.kafkastreams.integration.utils;
 
 /**
  * This class is copied directly from https://github.com/JohnReedLOL/kafka-streams. Importing was not
@@ -13,7 +13,6 @@ import java.io.IOException;
 
 /**
  * Runs an in-memory, "embedded" instance of a ZooKeeper server.
- *
  * The ZooKeeper server instance is automatically started when you create a new instance of this class.
  */
 public class ZooKeeperEmbedded {
@@ -26,6 +25,7 @@ public class ZooKeeperEmbedded {
 
     /**
      * Starts a ZooKeeper instance that listens on port 2181.
+     *
      * @throws Exception
      */
     public ZooKeeperEmbedded() throws Exception {
@@ -52,7 +52,6 @@ public class ZooKeeperEmbedded {
     /**
      * The ZooKeeper connection string aka `zookeeper.connect` in `hostnameOrIp:port` format.
      * Example: `127.0.0.1:2181`.
-     *
      * You can use this to e.g. tell Kafka brokers how to connect to this instance.
      */
     public String connectString() {
