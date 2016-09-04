@@ -7,7 +7,6 @@ package uk.co.hadoopathome.kafkastreams.integration; /**
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- * This class is adapted from https://github.com/JohnReedLOL/kafka-streams.
  */
 
 /**
@@ -45,18 +44,21 @@ public class StreamingDroolsIntegrationTest {
 
     @ClassRule
     public static final EmbeddedSingleNodeKafkaCluster CLUSTER = new EmbeddedSingleNodeKafkaCluster();
+    private static KieSession KIE_SESSION;
+
 
     private static final String inputTopic = "inputTopic";
     private static final String outputTopic = "outputTopic";
 
     @BeforeClass
     public static void startKafkaCluster() throws Exception {
+        KIE_SESSION = DroolsSessionFactory.createDroolsSession("IfContainsEPrepend0KS");
         CLUSTER.createTopic(inputTopic);
         CLUSTER.createTopic(outputTopic);
     }
 
     @Test
-    public void shouldCountWords() throws Exception {
+    public void testApplyRule() throws Exception {
         List<String> inputValues = Arrays.asList("Hello", "Canal", "Camel");
         List<String> expectedOutput = Arrays.asList("0Hello", "Canal", "0Camel");
 
@@ -86,7 +88,7 @@ public class StreamingDroolsIntegrationTest {
 
     private Properties createStreamConfig() {
         Properties streamsConfiguration = new Properties();
-        streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-lambda-integration-test");
+        streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "drools-test");
         streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
         streamsConfiguration.put(StreamsConfig.ZOOKEEPER_CONNECT_CONFIG, CLUSTER.zookeeperConnect());
         streamsConfiguration.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass().getName());
@@ -109,7 +111,7 @@ public class StreamingDroolsIntegrationTest {
     private Properties createConsumerConfig() {
         Properties consumerConfig = new Properties();
         consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
-        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "wordcount-lambda-integration-test-standard-consumer");
+        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "integration-test-consumer");
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -117,10 +119,9 @@ public class StreamingDroolsIntegrationTest {
     }
 
     private String applyRule(String value) {
-        KieSession kieSession = DroolsSessionFactory.createDroolsSession("IfContainsEPrepend0KS");
         Message message = new Message(value);
-        kieSession.insert(message);
-        kieSession.fireAllRules();
+        KIE_SESSION.insert(message);
+        KIE_SESSION.fireAllRules();
         return message.getContent();
     }
 }
