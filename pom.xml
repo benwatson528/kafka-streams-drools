@@ -30,6 +30,7 @@
         <avro.version>1.7.7</avro.version>
         <drools.version>6.4.0.Final</drools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <commons.configuration.version>2.0</commons.configuration.version>
     </properties>
 
     <dependencies>
@@ -52,6 +53,11 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>${kafka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>${commons.configuration.version}</version>
         </dependency>
         <dependency>
             <!-- This could be a test-only dependency, but we keep it a compile dependency so that

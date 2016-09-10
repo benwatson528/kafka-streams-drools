@@ -15,7 +15,7 @@ public class DroolsSessionFactory {
      * @param sessionName the session name from which rules should be retrieved
      * @return the instantiated KieSession
      */
-    public static KieSession createDroolsSession(String sessionName) {
+    protected static KieSession createDroolsSession(String sessionName) {
         KieServices kieServices = KieServices.Factory.get();
         KieContainer kieContainer = kieServices.getKieClasspathContainer();
         return kieContainer.newKieSession(sessionName);

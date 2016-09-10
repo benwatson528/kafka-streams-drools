@@ -23,9 +23,7 @@ import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.kie.api.runtime.KieSession;
-import uk.co.hadoopathome.kafkastreams.drools.DroolsSessionFactory;
-import uk.co.hadoopathome.kafkastreams.drools.Message;
+import uk.co.hadoopathome.kafkastreams.drools.DroolsRulesApplier;
 import uk.co.hadoopathome.kafkastreams.integration.utils.EmbeddedSingleNodeKafkaCluster;
 import uk.co.hadoopathome.kafkastreams.integration.utils.IntegrationTestUtils;
 
@@ -44,21 +42,20 @@ public class StreamingDroolsIntegrationTest {
 
     @ClassRule
     public static final EmbeddedSingleNodeKafkaCluster CLUSTER = new EmbeddedSingleNodeKafkaCluster();
-    private static KieSession KIE_SESSION;
-
-
     private static final String inputTopic = "inputTopic";
     private static final String outputTopic = "outputTopic";
+    private DroolsRulesApplier rulesApplier;
+
 
     @BeforeClass
     public static void startKafkaCluster() throws Exception {
-        KIE_SESSION = DroolsSessionFactory.createDroolsSession("IfContainsEPrepend0KS");
         CLUSTER.createTopic(inputTopic);
         CLUSTER.createTopic(outputTopic);
     }
 
     @Test
     public void testApplyRule() throws Exception {
+        rulesApplier = new DroolsRulesApplier("IfContainsEPrepend0KS");
         List<String> inputValues = Arrays.asList("Hello", "Canal", "Camel");
         List<String> expectedOutput = Arrays.asList("0Hello", "Canal", "0Camel");
 
@@ -69,7 +66,7 @@ public class StreamingDroolsIntegrationTest {
         KStreamBuilder builder = new KStreamBuilder();
 
         KStream<byte[], String> inputData = builder.stream(inputTopic);
-        KStream<byte[], String> outputData = inputData.mapValues(this::applyRule);
+        KStream<byte[], String> outputData = inputData.mapValues(rulesApplier::applyRule);
 
         outputData.to(outputTopic);
 
@@ -116,12 +113,5 @@ public class StreamingDroolsIntegrationTest {
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return consumerConfig;
-    }
-
-    private String applyRule(String value) {
-        Message message = new Message(value);
-        KIE_SESSION.insert(message);
-        KIE_SESSION.fireAllRules();
-        return message.getContent();
     }
 }
