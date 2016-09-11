@@ -6,6 +6,7 @@ import org.kie.api.runtime.KieSession;
 import static org.junit.Assert.assertEquals;
 
 public class DroolsSessionFactoryTest {
+
     @Test
     public void testDroolsSessionInstantiated() {
         KieSession kieSession = DroolsSessionFactory.createDroolsSession("IfContainsEPrepend0KS");

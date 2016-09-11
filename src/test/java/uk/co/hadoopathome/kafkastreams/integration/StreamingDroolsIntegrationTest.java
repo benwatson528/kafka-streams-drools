@@ -13,17 +13,19 @@ package uk.co.hadoopathome.kafkastreams.integration; /**
  * This class is adapted from https://github.com/JohnReedLOL/kafka-streams.
  */
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.*;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KStreamBuilder;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import uk.co.hadoopathome.kafkastreams.drools.DroolsRulesApplier;
+import uk.co.hadoopathome.kafkastreams.KafkaStreamsRunner;
+import uk.co.hadoopathome.kafkastreams.configuration.ConfigurationReader;
 import uk.co.hadoopathome.kafkastreams.integration.utils.EmbeddedSingleNodeKafkaCluster;
 import uk.co.hadoopathome.kafkastreams.integration.utils.IntegrationTestUtils;
 
@@ -42,36 +44,24 @@ public class StreamingDroolsIntegrationTest {
 
     @ClassRule
     public static final EmbeddedSingleNodeKafkaCluster CLUSTER = new EmbeddedSingleNodeKafkaCluster();
-    private static final String inputTopic = "inputTopic";
-    private static final String outputTopic = "outputTopic";
-    private DroolsRulesApplier rulesApplier;
-
-
-    @BeforeClass
-    public static void startKafkaCluster() throws Exception {
-        CLUSTER.createTopic(inputTopic);
-        CLUSTER.createTopic(outputTopic);
-    }
 
     @Test
-    public void testApplyRule() throws Exception {
-        rulesApplier = new DroolsRulesApplier("IfContainsEPrepend0KS");
+    public void testApplication() throws Exception {
+        PropertiesConfiguration properties = ConfigurationReader.getProperties("config.properties");
+        properties.setProperty("bootstrapServers", CLUSTER.bootstrapServers());
+        properties.setProperty("zookeeperServers", CLUSTER.zookeeperConnect());
+
+        String inputTopic = (String) properties.getProperty("inputTopic");
+        String outputTopic = (String) properties.getProperty("outputTopic");
+        CLUSTER.createTopic(inputTopic);
+        CLUSTER.createTopic(outputTopic);
+
         List<String> inputValues = Arrays.asList("Hello", "Canal", "Camel");
         List<String> expectedOutput = Arrays.asList("0Hello", "Canal", "0Camel");
+        String statePath = (String) properties.getProperty(StreamsConfig.STATE_DIR_CONFIG);
+        IntegrationTestUtils.purgeLocalStreamsState(statePath);
 
-        Properties streamsConfiguration = createStreamConfig();
-
-        IntegrationTestUtils.purgeLocalStreamsState(streamsConfiguration);
-
-        KStreamBuilder builder = new KStreamBuilder();
-
-        KStream<byte[], String> inputData = builder.stream(inputTopic);
-        KStream<byte[], String> outputData = inputData.mapValues(rulesApplier::applyRule);
-
-        outputData.to(outputTopic);
-
-        KafkaStreams streams = new KafkaStreams(builder, streamsConfiguration);
-        streams.start();
+        KafkaStreams streams = KafkaStreamsRunner.runKafkaStream(properties);
 
         Properties producerConfig = createProducerConfig();
         IntegrationTestUtils.produceValuesSynchronously(inputTopic, inputValues, producerConfig);
@@ -79,20 +69,8 @@ public class StreamingDroolsIntegrationTest {
         Properties consumerConfig = createConsumerConfig();
         List<String> actualOutput = IntegrationTestUtils
                 .waitUntilMinValuesRecordsReceived(consumerConfig, outputTopic, expectedOutput.size());
-        streams.close();
         assertThat(actualOutput).containsExactlyElementsOf(expectedOutput);
-    }
-
-    private Properties createStreamConfig() {
-        Properties streamsConfiguration = new Properties();
-        streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "drools-test");
-        streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
-        streamsConfiguration.put(StreamsConfig.ZOOKEEPER_CONNECT_CONFIG, CLUSTER.zookeeperConnect());
-        streamsConfiguration.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray().getClass().getName());
-        streamsConfiguration.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        streamsConfiguration.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        streamsConfiguration.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams");
-        return streamsConfiguration;
+        streams.close();
     }
 
     private Properties createProducerConfig() {

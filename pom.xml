@@ -60,6 +60,12 @@
             <version>${commons.configuration.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+
+        <dependency>
             <!-- This could be a test-only dependency, but we keep it a compile dependency so that
                  users are able to package the examples via `mvn package` and actually run the examples
                  against a Kafka cluster. -->

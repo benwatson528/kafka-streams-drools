@@ -23,9 +23,10 @@ public class KafkaStreamsRunner {
     /**
      * Runs the Kafka Streams job.
      *
-     * @param properties
+     * @param properties the configuration for the job
+     * @return the Kafka Streams instance
      */
-    public static void runKafkaStream(PropertiesConfiguration properties) {
+    public static KafkaStreams runKafkaStream(PropertiesConfiguration properties) {
         String droolsRuleName = properties.getString("droolsRuleName");
         DroolsRulesApplier rulesApplier = new DroolsRulesApplier(droolsRuleName);
         KStreamBuilder builder = new KStreamBuilder();
@@ -41,13 +42,15 @@ public class KafkaStreamsRunner {
         streams.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+
+        return streams;
     }
 
     /**
      * Creates the Kafka Streams configuration.
      *
+     * @param properties the configuration for the job
      * @return the Kafka Streams configuration in a Properties object
-     * @param properties
      */
     private static Properties createStreamConfig(PropertiesConfiguration properties) {
         Properties streamsConfiguration = new Properties();
