@@ -1,4 +1,4 @@
-package uk.co.hadoopathome.kafkastreams.drools
+package uk.co.hadoopathome.kafkastreams;
 
 import uk.co.hadoopathome.kafkastreams.drools.Message;
 
