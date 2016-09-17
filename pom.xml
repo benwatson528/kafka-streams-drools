@@ -31,6 +31,8 @@
         <drools.version>6.4.0.Final</drools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <commons.configuration.version>2.0</commons.configuration.version>
+        <maven-assembly-plugin.version>2.2-beta-4</maven-assembly-plugin.version>
+        <maven-jar-plugin.version>2.2</maven-jar-plugin.version>
     </properties>
 
     <dependencies>
@@ -116,6 +118,34 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>uk.co.hadoopathome.kafkastreams.KafkaStreamsDroolsMain</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
